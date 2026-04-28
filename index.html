@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelBot — Demo Ticket Booking</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f4f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    h1 {
+      font-size: 14px;
+      font-weight: 500;
+      color: #888;
+      text-align: center;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    #chat-wrap {
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+      background: #fff;
+      border: 0.5px solid #ddd;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    #chat-header {
+      padding: 12px 16px;
+      border-bottom: 0.5px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+    }
+
+    #avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #EEEDFE;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #avatar svg { display: block; }
+
+    #bot-name { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+    #bot-sub  { font-size: 11px; color: #888; }
+
+    #demo-badge {
+      margin-left: auto;
+      font-size: 11px;
+      background: #EAF3DE;
+      color: #3B6D11;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .bot  { align-self: flex-start; background: #f1f0f5; color: #1a1a1a; border-bottom-left-radius: 4px; }
+    .user { align-self: flex-end; background: #534AB7; color: #EEEDFE; border-bottom-right-radius: 4px; }
+
+    .typing {
+      align-self: flex-start;
+      background: #f1f0f5;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: #999;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+      margin: 0 2px;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%            { transform: translateY(-6px); }
+    }
+
+    .quick-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+    .qbtn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border: 0.5px solid #ccc;
+      border-radius: 20px;
+      background: #fff;
+      color: #555;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .qbtn:hover { background: #f5f5f5; }
+
+    #input-row {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 0.5px solid #eee;
+      background: #fff;
+    }
+
+    #user-input {
+      flex: 1;
+      border: 0.5px solid #ccc;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #user-input:focus { border-color: #534AB7; }
+
+    #send-btn {
+      background: #534AB7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #send-btn:hover { background: #3C3489; }
+
+    #footer {
+      text-align: center;
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>Demo Ticket Booking</h1>
+  <div id="chat-wrap">
+    <div id="chat-header">
+      <div id="avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+      </div>
+      <div>
+        <div id="bot-name">TravelBot</div>
+        <div id="bot-sub">Demo Booking System</div>
+      </div>
+      <span id="demo-badge">Demo mode</span>
+    </div>
+
+    <div id="messages"></div>
+
+    <div id="input-row">
+      <input id="user-input" type="text" placeholder="Type a message…" />
+      <button id="send-btn" onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+  <p id="footer">All bookings are simulated &mdash; no real payments or reservations are made.</p>
+</div>
+
+<script>
+  const ANTHROPIC_API_KEY = 'YOUR_API_KEY_HERE'; // Replace with your Anthropic API key
+
+  const SYSTEM = `You are TravelBot, a friendly AI chatbot for a DEMO ticket booking website. Help users book bus, train, and airplane tickets step by step.
+
+IMPORTANT RULES:
+- This is a DEMO system. All bookings, payments, tickets are completely fake.
+- Use "Demo Credits (DC)" for all prices — never real currency.
+- Use fun dummy city names and routes.
+- Keep responses SHORT and friendly (2-5 lines max per message).
+- Guide users through these steps in order:
+  1. Ask what to book: bus, train, or flight
+  2. Ask: source city, destination city, travel date, number of passengers
+  3. Show exactly 2-3 fake travel options as a numbered list with: type, departure time, duration, price in DC
+  4. Ask user to pick option 1, 2, or 3
+  5. Ask for passenger name and age
+  6. Show a booking summary and ask "Confirm? (yes/no)"
+  7. Simulate payment — always say "Payment successful!"
+  8. Generate a fake ticket with a random booking ID (format: TRV-XXXXX), all travel details, and Status: CONFIRMED
+- If user asks anything unrelated, politely redirect to booking.
+- Use simple formatting. For options, use numbered lists. For tickets, use a clear layout.
+- Start by greeting the user warmly and asking what they'd like to book today.`;
+
+  let history = [];
+  const messagesEl = document.getElementById('messages');
+  const inputEl    = document.getElementById('user-input');
+
+  function addMsg(text, role) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+    div.innerHTML = text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const d = document.createElement('div');
+    d.className = 'typing'; d.id = 'typing-indicator';
+    d.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    messagesEl.appendChild(d);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
+
+  async function callClaude(userMsg) {
+    history.push({ role: 'user', content: userMsg });
+    showTyping();
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages: history
+        })
+      });
+      const data = await res.json();
+      removeTyping();
+      const reply = (data.content || []).map(b => b.text || '').join('');
+      history.push({ role: 'assistant', content: reply });
+      addMsg(reply, 'bot');
+    } catch (e) {
+      removeTyping();
+      addMsg('Oops, something went wrong. Please check your API key and try again.', 'bot');
+    }
+  }
+
+  function sendMsg() {
+    const txt = inputEl.value.trim();
+    if (!txt) return;
+    addMsg(txt, 'user');
+    inputEl.value = '';
+    callClaude(txt);
+  }
+
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+
+  function showQuickReplies() {
+    const wrap = document.createElement('div');
+    wrap.className = 'quick-btns';
+    ['Book a flight', 'Book a train', 'Book a bus'].forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'qbtn';
+      btn.textContent = label;
+      btn.onclick = () => { wrap.remove(); addMsg(label, 'user'); callClaude(label); };
+      wrap.appendChild(btn);
+    });
+    messagesEl.appendChild(wrap);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  async function startChat() {
+    showTyping();
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 300,
+          system: SYSTEM,
+          messages: [{ role: 'user', content: 'Start the conversation by greeting me.' }]
+        })
+      });
+      const data = await res.json();
+      removeTyping();
+      const reply = (data.content || []).map(b => b.text || '').join('');
+      history.push({ role: 'user',      content: 'Start the conversation by greeting me.' });
+      history.push({ role: 'assistant', content: reply });
+      addMsg(reply, 'bot');
+    } catch (e) {
+      removeTyping();
+      addMsg('👋 Welcome to the Demo Booking System! Would you like to book a bus, train, or flight today?', 'bot');
+    }
+    showQuickReplies();
+  }
+
+  startChat();
+</script>
+</body>
+</html>
